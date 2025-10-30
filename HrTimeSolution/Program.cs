@@ -3,32 +3,44 @@ using HrTime.Devices;
 using HrTime.Push;
 using Microsoft.EntityFrameworkCore;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = AppContext.BaseDirectory
+});
+
+if (OperatingSystem.IsWindows())
+{
+    builder.Host.UseWindowsService(options =>
+    {
+        options.ServiceName = builder.Configuration["ServiceName"] ?? "HrTime Device Service";
+    });
+}
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// COM interop for zkemkeeper (±ØĞè´ò¿ª)
+// COM interop for zkemkeeper (å¿…éœ€æ‰“å¼€)
 AppContext.SetSwitch("System.Runtime.InteropServices.BuiltInComInterop.IsSupported", true);
 
-// EF Core DbContext (Scoped ÉúÃüÖÜÆÚ)
+// EF Core DbContext (Scoped ç”Ÿå‘½å‘¨æœŸ)
 builder.Services.AddDbContext<AppDb>(o =>
     o.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
-// Options ÅäÖÃ°ó¶¨
-// ÏÔÊ½¶ÁÈ¡Êı×é section ²¢°ó¶¨µ½ List<DeviceOptions>
+// Options é…ç½®ç»‘å®š
+// æ˜¾å¼è¯»å–æ•°ç»„ section å¹¶ç»‘å®šåˆ° List<DeviceOptions>
 //var devices = builder.Configuration.GetSection("DeviceOptions").Get<List<DeviceOptions>>()
 //              ?? new List<DeviceOptions>();
 
-// ÒÔÊµÀı·½Ê½×¢²á£¬±ÜÃâ IOptions<> ÅÉÉú List °ó¶¨ÎÊÌâ
+// ä»¥å®ä¾‹æ–¹å¼æ³¨å†Œï¼Œé¿å… IOptions<> æ´¾ç”Ÿ List ç»‘å®šé—®é¢˜
 //builder.Services.AddSingleton(new DeviceListOptions(devices));
 //builder.Services.Configure<DeviceListOptions>(builder.Configuration.GetSection("DeviceOptions"));
 builder.Services.Configure<PushSettings>(builder.Configuration.GetSection("Push"));
 builder.Services.Configure<WeComInternalOptions>(builder.Configuration.GetSection("Push:Internal"));
 builder.Services.Configure<WeComDirectOptions>(builder.Configuration.GetSection("Push:Direct"));
 
-// Push Ä£Ê½ÇĞ»»£¨Internal / Direct£©
+// Push æ¨¡å¼åˆ‡æ¢ï¼ˆInternal / Directï¼‰
 builder.Services.AddSingleton<IWeComPush>(sp =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
@@ -40,8 +52,8 @@ builder.Services.AddSingleton<IWeComPush>(sp =>
     };
 });
 
-// ºËĞÄ·şÎñ
-builder.Services.AddSingleton<AttendanceRouter>();   // Router ¸ÄÎª Singleton + IServiceScopeFactory ½â¾ö Scoped ÎÊÌâ
+// æ ¸å¿ƒæœåŠ¡
+builder.Services.AddSingleton<AttendanceRouter>();   // Router æ”¹ä¸º Singleton + IServiceScopeFactory è§£å†³ Scoped é—®é¢˜
 builder.Services.AddSingleton<ZkDeviceManager>();
 builder.Services.AddHostedService<DeviceHostService>();
 //builder.Services.AddHostedService<BackfillService>();
@@ -51,7 +63,7 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// Swagger UI (½ö¿ª·¢»·¾³ÆôÓÃ)
+// Swagger UI (ä»…å¼€å‘ç¯å¢ƒå¯ç”¨)
 if (app.Environment.IsDevelopment()||app.Environment.IsProduction())
 {
     app.UseSwagger();
