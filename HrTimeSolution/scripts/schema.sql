@@ -1,0 +1,44 @@
+CREATE TABLE Devices(
+    Id INT PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    IP NVARCHAR(64) NOT NULL,
+    Port INT NOT NULL,
+    MachineNo INT NOT NULL DEFAULT 1,
+    Sn NVARCHAR(100) NOT NULL DEFAULT '',
+    LocationId INT NOT NULL,
+    LastSeen DATETIME NULL,
+    IsOnline BIT NOT NULL DEFAULT 0,
+    CommPassword NVARCHAR(32) NULL
+);
+CREATE INDEX IX_Devices_IP ON Devices(IP);
+
+CREATE TABLE Locations(
+    Id INT PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    Address NVARCHAR(200) NOT NULL DEFAULT ''
+);
+
+CREATE TABLE Employees(
+    Id INT IDENTITY PRIMARY KEY,
+    EnrollNumber NVARCHAR(32) NOT NULL,
+    Name NVARCHAR(50) NOT NULL,
+    WeComUserId NVARCHAR(64) NOT NULL DEFAULT '',
+    CardNo NVARCHAR(50) NULL,
+    DeptId INT NULL
+);
+CREATE INDEX IX_Employees_Enroll ON Employees(EnrollNumber);
+
+CREATE TABLE AttendanceLogs(
+    Id INT IDENTITY PRIMARY KEY,
+    DeviceId INT NOT NULL,
+    EnrollNumber NVARCHAR(32) NOT NULL,
+    [Time] DATETIME NOT NULL,
+    VerifyMethod INT NOT NULL,
+    AttState INT NOT NULL,
+    WorkCode INT NOT NULL,
+    HashDedup NVARCHAR(64) NOT NULL,
+    PushedAt DATETIME NULL,
+    ErrCode INT NOT NULL DEFAULT 0,
+    ErrMsg NVARCHAR(200) NOT NULL DEFAULT ''
+);
+CREATE UNIQUE INDEX UX_AttendanceLogs_Hash ON AttendanceLogs(HashDedup);
